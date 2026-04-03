@@ -1,59 +1,43 @@
-# FrontendTareasProyectos
+# Frontend - Tareas y Proyectos 
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.1.
+Este proyecto corresponde al desarrollo del frontend para la materia **Programación Avanzada II** (Ciclo Lectivo 2026).
+El objetivo principal es desarrollar competencias reales en Angular utilizando un enfoque de **Spec-Driven Development (SDD)** y asistencia de Inteligencia Artificial.
 
-## Development server
+## Repositorio del Backend
+Para el correcto funcionamiento de esta aplicación, se requiere el backend desarrollado previamente, el cual gestiona la API REST, autenticación JWT y reglas de negocio.
 
-To start a local development server, run:
+* **URL del Repositorio Backend:** https://github.com/JoacDc/IntegradorSinTecladosProgII.git
 
-```bash
-ng serve
-```
+## Tecnologías y Lineamientos Técnicos
+Siguiendo los requisitos de la cátedra, este proyecto implementa.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+* **Framework:** Angular (Versión estable vigente).
+* **Arquitectura:** Componentes Standalone con responsabilidades claras.
+* **Estado:** Gestión de estado mediante **Signals** de Angular.
+* **Estilos:** Tailwind CSS.
+* **Comunicación:** HttpClient con interceptores para manejo de **JWT**.
+* **Metodología:** Spec-Driven Development (cada feature cuenta con su archivo `SPEC.md`).
 
-## Code scaffolding
+## Rol de la Inteligencia Artificial
+La IA se utiliza como una herramienta de apoyo para acelerar la implementación de código repetitivo y explorar patrones. 
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Instrucciones de Instalación
 
-```bash
-ng generate component component-name
-```
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/JoacDc/frontend-tareas-proyectos.git
+   cd frontend-tareas-proyectos
+   ```
+2. **Instalar Dependencias**
+    ```bash
+    npm install
+    ```
+3. **Ejecutar el proyecto**
+    ```bash
+    ng serve 
+   ```
+4. **La aplicación estará disponible en http://localhost:4200/**
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+**ALUMNO: DIEGO JOAQUIN DEL CANTO**
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+**MATERIA: PROGRAMACION AVANZADA II - 2026**
