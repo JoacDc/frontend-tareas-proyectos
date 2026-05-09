@@ -1,0 +1,10 @@
+# SPEC  — Referencia: Listado de proyectos
+
+| Campo | Descripción y criterio de calidad |
+| :--- | :--- |
+| **Nombre de la feature** | Listado de proyectos del usuario |
+| **Descripción general** | El usuario puede visualizar todos los proyectos cargados en el sistema en una cuadrícula de tarjetas, viendo su nombre, descripción y estado actual. |
+| **Endpoints involucrados** | **GET** `/projects` <br><br> - **Response:** Array de `ProjectResponseDTO` `{ id, name, startDate, endDate, status, description }` <br> - **Error:** Manejo de 500 si el servidor está caído. |
+| **Restricciones de negocio** | - Las fechas deben formatearse como `DD/MM/YYYY`. <br> - El badge de estado debe cambiar de color según el valor (ej: ACTIVE en verde, PLANNED en azul). |
+| **Lineamientos técnicos** | Standalone Components, **Tailwind CSS** para el diseño, **Signals** para el estado de la lista, y `ProjectService` para la comunicación. |
+| **Criterios de aceptación** | 1. **Dado** que existen proyectos, **cuando** carga la ruta `/projects`, **entonces** se muestran en tarjetas de Tailwind. <br> 2. **Dado** que el servicio falla, **cuando** se intenta recuperar los datos, **entonces** se muestra un mensaje de error amigable. <br> 3. **Dado** que no hay proyectos, **cuando** se carga la vista, **entonces** aparece un texto "No hay proyectos disponibles". |

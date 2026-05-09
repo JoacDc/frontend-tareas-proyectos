@@ -1,0 +1,35 @@
+<h2>LISTADOS DE PROYECTOS</h2><!-- Estados: loading, error, vacío y listado -->
+
+@if (loading()) {
+  <p class="text-center text-gray-500 text-lg mt-10">Cargando proyectos...</p>
+} @else if (error()) {
+  <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-lg mx-auto mt-10" role="alert">
+    <span class="block sm:inline">{{ error() }}</span>
+  </div>
+} @else if (projects().length === 0) {
+  <p class="text-center text-gray-500 text-lg mt-10">No hay proyectos disponibles</p>
+} @else {
+  <!-- Cuadrícula de tarjetas -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+    @for (project of projects(); track project.id) {
+      <div class="bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+        <!-- Nombre del proyecto -->
+        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ project.name }}</h3>
+
+        <!-- Descripción truncada -->
+        <p class="text-gray-600 text-sm mb-4 line-clamp-3">{{ project.description }}</p>
+
+        <!-- Fechas formateadas con DatePipe -->
+        <div class="text-sm text-gray-500 space-y-1 mb-4">
+          <p>Inicio: <span class="font-medium">{{ project.startDate | date:'dd/MM/yyyy' }}</span></p>
+          <p>Fin: <span class="font-medium">{{ project.endDate | date:'dd/MM/yyyy' }}</span></p>
+        </div>
+
+        <!-- Badge de estado con color dinámico -->
+        <span [class]="statusBadgeClass(project.status)">
+          {{ project.status }}
+        </span>
+      </div>
+    }
+  </div>
+}
