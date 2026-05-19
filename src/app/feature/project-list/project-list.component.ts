@@ -1,10 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ProjectService } from '../../services/project.service';
+import {RouterLink} from '@angular/router';
+
 @Component({
   selector: 'app-project-list',
   standalone: true,
-  imports: [DatePipe], // necesario para formatear fechas en la plantilla
+  imports: [DatePipe, RouterLink], // necesario para formatear fechas en la plantilla
   templateUrl: './project-list.component.html',
 })
 export class ProjectListComponent implements OnInit {

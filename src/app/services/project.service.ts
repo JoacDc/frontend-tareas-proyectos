@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { ProjectResponseDTO } from '../core/models/project.model';
 import { catchError, tap } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { ProjectRequestDTO } from '../core/models/project.request.dto';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
@@ -37,5 +38,9 @@ export class ProjectService {
         }),
       )
       .subscribe();
+  }
+
+  createProject(project: ProjectRequestDTO): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, project);
   }
 }

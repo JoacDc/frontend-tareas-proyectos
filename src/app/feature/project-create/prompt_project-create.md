@@ -1,0 +1,82 @@
+# Contexto de Desarrollo: Feature Project Creation
+
+Actúa como un desarrollador **Senior de Angular**. Estoy siguiendo la metodología **Spec Driven Development**.
+
+## Contexto del Sistema
+Estoy desarrollando el frontend de una app de gestión de tareas. El backend es una API REST en Java que ya responde en `http://localhost:8080/projects`.
+
+## Tecnologías
+*   **Framework:** Angular 21
+*   **Arquitectura:** Standalone Components
+*   **Gestión de Estado:** Signals
+*   **Estilos:** Tailwind CSS v4
+*   **Formularios:** Reactive Forms
+
+## Especificación de la Feature
+
+# SPEC — Referencia: Creación de proyecto del usuario
+
+| Campo | Descripción y criterios de calidad |
+| :--- | :--- |
+| **Nombre de la feature** | Creación de proyecto del usuario |
+| **Descripción General** | El usuario, mediante un botón agregar proyecto, puede agregar un proyecto en un formulario ingresando los datos: nombre, fecha de inicio, fecha de fin, estado (Planned, active, closed), descripción. |
+| **Endpoint Involucrados** | **POST** `/project` <br><br> **Request:** Array de `ProjectRequestDTO` `{ name, startDate, endDate, status, description }` <br><br> **Errores:** manejo 400 si la solicitud es incorrecta. <br> Manejo 500 si el servidor está caído. |
+| **Restricciones de negocios** | - Las fechas deben ingresarse en formato `YYYY/MM/DD`. <br> - La fecha de inicio y fin deben ser obligatorias. <br> - El nombre debe ser obligatorio. <br> - El estado debe ser obligatorio. <br> - La descripción se puede agregar o no. |
+| **Lineamientos técnicos** | Standalone Components, **Tailwind CSS** para el diseño, **Signals** para el estado de la lista, y `ProjectService` para la comunicación. Reactive forms para el formulario de creación. |
+| **Criterios de aceptación** | **1) Creación exitosa del proyecto** <br><br> Dado que el usuario está en la pantalla de listado de proyectos y presiona el botón “Agregar Proyecto” <br><br> Cuando completa el formulario con todos los campos obligatorios: <br><br> - Nombre (ej: nombre del proyecto) <br> - Fecha de inicio (ej: 2026/05/20) <br> - Fecha de fin (ej: 2026/06/20) <br> - Estado (seleccionar estado: ACTIVE, PLANNED, CLOSED) <br> - Descripción (Opcional) <br><br> Y presiona el botón “Guardar Proyecto” <br><br> Entonces el sistema envía una petición POST `/project` con la estructura: <br><br> ```json { "name": "Nuevo Proyecto", "startDate": "2026-06-01", "endDate": "2026-08-30", "status": "ACTIVE", "description": "Descripción opcional" } ``` <br><br> Y el backend debe responder con código `201` <br> Y el nuevo proyecto debe aparecer en la lista de proyectos <br> Y el formulario debe cerrarse o redirigir al listado <br> Y se debe mostrar un mensaje de éxito ("Proyecto creado correctamente") <br><br><br> **2) Validación de campos obligatorios** <br><br> Dado que el usuario está en el formulario de creación de proyectos <br><br> Cuando intenta enviar el formulario sin completar uno o más de los siguientes campos obligatorios: <br><br> - Nombre (vacío) <br> - Fecha de inicio (vacía) <br> - Fecha de fin (vacía) <br> - Estado (sin seleccionar) <br><br> Entonces el sistema NO debe enviar la petición al backend <br><br> Y debe mostrar mensajes de error específicos debajo de cada campo: <br><br> - "El nombre es requerido" <br> - "La fecha de inicio es requerida" <br> - "La fecha de fin es requerida" <br> - "El estado es requerido" <br><br> Y los campos inválidos deben marcarse visualmente (borde rojo) <br><br> Y el botón "Guardar" debe permanecer habilitado para corregir errores. <br><br><br> **3) Manejo de errores** <br><br> **Escenario A – Error 400 (Solicitud incorrecta)** <br><br> Dado que el usuario completa el formulario correctamente <br><br> Cuando el backend responde con un error 400 (ej: fecha de fin inválida porque es anterior a la actual) <br><br> Entonces el frontend debe mostrar el mensaje de error proveniente del backend <br><br> Y el proyecto NO debe agregarse a la lista <br><br> Y el formulario debe permanecer abierto con los datos ingresados <br><br> Y el botón "Guardar" debe habilitarse nuevamente <br><br> **Escenario B – Error 500 (Servidor caído)** <br><br> Dado que el usuario completa el formulario correctamente <br><br> Cuando el backend responde con un error 500 (servidor no disponible) <br><br> Entonces el frontend debe mostrar un mensaje genérico: "Error del servidor. Intente nuevamente más tarde" <br><br> Y el proyecto NO debe agregarse a la lista <br><br> Y el formulario debe permanecer abierto |
+
+---
+
+## Tarea: Generación de Código
+
+Generá el código estructurado y separado para los siguientes elementos:
+
+1.  **Interfaz `ProjectRequestDTO`**
+2.  **Servicio `ProjectService`:** Utilizá el servicio existente (el mismo que trae los proyectos para el listado) e implementá en él la lógica para la petición `POST`.
+3.  **Componente `ProjectCreateComponent` (Standalone):** Con un diseño moderno utilizando Tailwind v4.
+
+### Requisitos de Entrega:
+*   **Código separado:** Separá claramente la lógica del servicio, el código TypeScript de `create-project.component.ts` y el template HTML donde irá toda la interfaz del frontend.
+*   **Explicación detallada:** No generes código opaco. Incluí una explicación técnica de cada herramienta, patrón o característica de Angular 21 / Tailwind v4 que hayas utilizado en la solución.
+
+
+## SEGUNDO PROMPT: PROBLAMAS DEL MANEJO DE FECHAS.
+
+### Validación de Fechas en `ProjectCreateComponent`
+
+Solucionar el error de validación de fechas en el formulario de creación de proyectos y corregir el error `NG01101` asegurando que los validadores personalizados sean estrictamente síncronos.
+
+---
+
+### 1. Actualización del `FormGroup`
+Agregar los siguientes validadores síncronos en la definición del formulario:
+*   **`startDate`**: `[Validators.required, validateNotPastDate]`
+*   **`endDate`**: `[Validators.required, validateNotPastDate]`
+
+### 2. Implementación de `validateNotPastDate`
+Implementar el método de validación personalizado con la siguiente lógica:
+*   Comparar la fecha seleccionada por el usuario contra la fecha de hoy (limpiando las horas con `setHours(0,0,0,0)` para evitar falsos positivos por diferencias de minutos/segundos).
+*   Retornar el objeto `{ pastDate: true }` si la fecha ingresada es anterior a hoy.
+*   **Importante (Error NG01101):** Asegurar que la función retorne estrictamente `ValidationErrors | null` de forma directa (síncrona), evitando el uso de promesas (`Promise`) u observables (`Observable`) para que Angular no lo confunda con un validador asíncrono.
+
+### 3. Control de Flujo en `onSubmit()`
+*   Antes de realizar el envío o disparar la lógica de la petición HTTP, verificar de forma explícita el estado del formulario utilizando `this.projectForm.valid`.
+
+### 4. Feedback Visual en el Template (HTML)
+*   Renderizar un mensaje de error claro en la interfaz si el campo correspondiente tiene el error activo, evaluando:
+    `f['startDate'].hasError('pastDate')` (o su equivalente para `endDate`).
+
+
+# Checklist - Crear Proyecto
+
+- ✅ El formulario muestra errores al enviar campos vacíos
+- ✅ No se puede enviar fecha de inicio anterior a hoy
+- ✅ No se puede enviar fecha de fin anterior a hoy
+- ✅ No se puede enviar fecha de fin menor a fecha de inicio
+- ✅ Al enviar datos correctos, muestra mensaje de éxito
+- ✅ Al enviar datos correctos, redirige al listado de proyectos
+- ✅ El proyecto nuevo aparece en el listado
+- ✅ El botón "Cancelar" redirige al listado sin guardar
+- ✅ Los errores del backend (400, 500) se muestran correctamente
+- ✅ El botón "Nuevo Proyecto" en el listado navega al formulario
+- ✅ No hay errores en consola del navegador
