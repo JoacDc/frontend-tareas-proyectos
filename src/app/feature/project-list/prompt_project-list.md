@@ -1,40 +1,69 @@
-# Prompt: Listado de proyectos
+# Prompt: Implementación de listado de proyectos en Angular
 
-Actúa como un desarrollador Senior de Angular. Estoy siguiendo la metodología Spec Driven Development.
+## 1. Rol y tecnología
+Actúa como un desarrollador senior de Angular 21. Utiliza standalone components, Signals, Tailwind CSS y sintaxis moderna de control flow (@if, @else if, @else, @for).
 
-## Contexto del sistema
+## 2. Contexto del sistema
+Estoy desarrollando el frontend de una aplicación de gestión de tareas y proyectos. El backend es una API REST desarrollada en Java/Spring Boot que ya está corriendo en http://localhost:8080. La API responde con datos de proyectos en formato JSON.
 
-Estoy desarrollando el frontend de una app de gestión de tareas. El backend es una API REST en Java que ya responde en `http://localhost:8080/projects`.
+# SPEC  — Referencia: Listado de proyectos
 
-## Tecnologías
+| Campo | Descripción y criterio de calidad                                                                                                                                                                                                                                                                                                                                                                      |
+| :--- |:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Nombre de la feature** | Listado de proyectos del usuario                                                                                                                                                                                                                                                                                                                                                                       |
+| **Descripción general** | El usuario puede visualizar todos los proyectos cargados en el sistema en una cuadrícula de tarjetas, viendo su nombre, descripción y estado actual. Ademas, deber tener 3 botones (Agregar Proyecto, Agregar Tarea, Eliminar Proyecto) para que el usuario tenga la comodidad de trabajar.                                                                                                            |
+| **Endpoints involucrados** | **GET** `/projects` <br><br> - **Response:** Array de `ProjectResponseDTO` `{ id, name, startDate, endDate, status, description }` <br> - **Error:** Manejo de 500 si el servidor está caído.                                                                                                                                                                                                          |
+| **Restricciones de negocio** | - Las fechas deben formatearse como `DD/MM/YYYY`. <br> - Los proyectos deben mostrarse independientemente del estado en el que se encuentre el proyecto. <br> - El badge de estado debe cambiar de color según el valor (ej: ACTIVE en verde, PLANNED en azul, CLOSED en girs).                                                                                                                        |
+| **Lineamientos técnicos** | Standalone Components, **Tailwind CSS** para el diseño, **Signals** para el estado de la lista, y `ProjectService` para la comunicación.                                                                                                                                                                                                                                                               |
+| **Criterios de aceptación** | 1. **Dado** que existen proyectos, **cuando** carga la ruta `/projects`, **entonces** se muestran en tarjetas de Tailwind. <br> 2. **Dado** que el servicio falla, **cuando** se intenta recuperar los datos, **entonces** se muestra un mensaje de error amigable. <br> 3. **Dado** que no hay proyectos, **cuando** se carga la vista, **entonces** aparece un texto "No hay proyectos disponibles". |
 
+
+## 3. Especificación de la feature (SPEC)
+Endpoint: GET /projects
+Response: Array de ProjectResponseDTO con { id, name, startDate, endDate, status, description }
+
+Requisitos funcionales:
+- Mostrar proyectos en cuadrícula de tarjetas responsive
+- Cada tarjeta: nombre, descripción, fechas (formato DD/MM/YYYY), badge de estado
+- Badge con colores: ACTIVE (verde), PLANNED (azul), CLOSED (gris)
+- Tres botones visibles: "Agregar Proyecto", "Agregar Tarea", "Eliminar Proyecto" (solo UI, sin funcionalidad)
+- Manejar estados: carga (spinner), error (mensaje amigable), lista vacía ("No hay proyectos disponibles")
+- Ruta: /projects
+
+## 4. Restricciones técnicas concretas
 - Angular 21
-- Standalone Components
-- Signals para el estado
-- Tailwind CSS v4
+- Standalone components 
+- Signals para estado reactivo 
+- Tailwind CSS exclusivamente para estilos
+- Sintaxis de control flow moderna ( } @else if { sin saltos de línea)
+- Proxy de Angular para evitar CORS: /api → http://localhost:8080
+- El service debe llamar a /api/projects (no a la URL directa)
+- No implementar lógica de negocio en los botones (solo console.log)
 
-# Especificación de la Feature
+## 5. Formato de salida esperado
+Generar el código completo y funcional separado en los siguientes archivos, listo para copiar y pegar:
 
-# SPEC — Referencia: Listado de proyectos
+1. src/app/models/project.models.ts
+  - Interfaz ProjectResponseDTO
 
-| Campo | Descripción y criterio de calidad |
-|---|---|
-| **Nombre de la feature** | Listado de proyectos del usuario |
-| **Descripción general** | El usuario puede visualizar todos los proyectos cargados en el sistema en una cuadrícula de tarjetas, viendo su nombre, descripción y estado actual. |
-| **Endpoints involucrados** | - **GET** /projects<br>- **Response**: Array de `ProjectResponseDTO` { id, name, startDate, endDate, status, description }<br>- **Error**: Manejo de 500 si el servidor está caído. |
-| **Restricciones de negocio** | - Las fechas deben formatearse como `DD/MM/YYYY`.<br>- El badge de estado debe cambiar de color según el valor (ej: ACTIVE en verde, PLANNED en azul). |
-| **Lineamientos técnicos** | Standalone Components, **Tailwind CSS** para el diseño, **Signals** para el estado de la lista, y `ProjectService` para la comunicación. |
-| **Criterios de aceptación** | 1. **Dado** que existen proyectos, **cuando** carga la ruta `/projects`, **entonces** se muestran en tarjetas de Tailwind.<br>2. **Dado** que el servicio falla, **cuando** se intenta recuperar los datos, **entonces** se muestra un mensaje de error amigable.<br>3. **Dado** que no hay proyectos, **cuando** se carga la vista, **entonces** aparece un texto "No hay proyectos disponibles". |
-## Tarea
+2. src/app/services/project.service.ts
+  - Signals: projects, loading, error
+  - Método loadProjects()
+  - URL: /api/projects
 
-Generá el código para:
+3. src/app/feature/project-list/project-list.component.ts
+  - Inyectar service con inject()
+  - Vincular Signals del service
+  - Métodos: getStatusColor(), formatDate()
+  - Métodos placeholder para botones
 
-1. La interfaz `ProjectResponseDTO`
-2. El `ProjectService` usando Signals
-3. El `ProjectListComponent` (standalone) con un diseño de tarjetas usando Tailwind v4
+4. src/app/feature/project-list/project-list.component.html
+  - Estructura @if / } @else if / } @else
+  - @for para grid de tarjetas
+  - Clases Tailwind para todo el diseño
 
-## Importante
+5. proxy.conf.json (raíz del proyecto)
+  - Configuración para redirigir /api a http://localhost:8080
 
-- No generes código opaco
-- Explicá brevemente por qué usaste Signals en lugar de RxJS para que pueda defenderlo en la revisión
-- Todo separado en el componente, el servicio y el template
+
+
