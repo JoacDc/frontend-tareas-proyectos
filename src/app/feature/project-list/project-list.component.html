@@ -1,0 +1,99 @@
+<div class="container mx-auto px-4 py-8">
+  <!-- Header con título y botones de acción -->
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Mis Proyectos</h1>
+
+    <!-- Grupo de botones -->
+    <div class="flex gap-3">
+      <button
+        (click)="onAddProject()"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm">
+        + Agregar Proyecto
+      </button>
+
+      <button
+        (click)="onAddTask()"
+        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium shadow-sm">
+        + Agregar Tarea
+      </button>
+
+      <button
+        (click)="onDeleteProject()"
+        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium shadow-sm">
+        🗑️ Eliminar Proyecto
+      </button>
+    </div>
+  </div>
+
+  <!-- Control flow con la sintaxis correcta de Angular 17+ -->
+  @if (loading()) {
+    <!-- Estado de carga -->
+    <div class="flex justify-center items-center py-12">
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-gray-600">Cargando proyectos...</p>
+      </div>
+    </div>
+  } @else if (error()) {
+    <!-- Estado de error -->
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-red-700">{{ error() }}</p>
+        </div>
+      </div>
+    </div>
+  } @else if (projects().length === 0) {
+    <!-- Sin proyectos -->
+    <div class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No hay proyectos disponibles</h3>
+      <p class="mt-1 text-sm text-gray-500">Comienza creando tu primer proyecto.</p>
+    </div>
+  } @else {
+    <!-- Grid de proyectos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      @for (project of projects(); track project.id) {
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 overflow-hidden">
+          <div class="p-6">
+            <!-- Header de la tarjeta -->
+            <div class="flex justify-between items-start mb-3">
+              <h2 class="text-xl font-semibold text-gray-900">{{ project.name }}</h2>
+              <span class="px-2 py-1 text-xs font-semibold rounded-full {{ getStatusColor(project.status) }}">
+                {{ project.status }}
+              </span>
+            </div>
+
+            <!-- Descripción -->
+            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+              {{ project.description || 'Sin descripción' }}
+            </p>
+
+            <!-- Fechas -->
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center text-gray-500">
+                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Inicio: {{ formatDate(project.startDate) }}</span>
+              </div>
+              <div class="flex items-center text-gray-500">
+                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Fin: {{ formatDate(project.endDate) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
