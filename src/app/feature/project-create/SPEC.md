@@ -1,33 +1,3 @@
-# Contexto de Desarrollo: Feature Project Creation
-
-Actúa como un desarrollador Senior de Angular especializado en Angular 21, Standalone Components, Signals, Reactive Forms y Tailwind CSS v4.
-
-Estoy siguiendo la metodología Spec Driven Development (SDD).
-
-## Contexto del Sistema
-
-Estoy desarrollando el frontend de una aplicación de gestión de tareas.
-
-Backend disponible en:
-
-```text
-http://localhost:8080/projects
-```
-
-La implementación debe respetar estrictamente la especificación funcional contenida en `spec.md`. Si existe alguna contradicción entre el código generado y la SPEC, debe prevalecer la SPEC.
-
-## Tecnologías
-
-* Angular 21
-* Standalone Components
-* Signals
-* Reactive Forms
-* RxJS
-* Tailwind CSS v4
-* TypeScript
-
-## Especificación Funcional
-
 # SPEC — Referencia: Creación de proyecto del usuario
 
 | Campo | Descripción y criterios de calidad |
@@ -41,173 +11,30 @@ La implementación debe respetar estrictamente la especificación funcional cont
 
 ---
 
-## Tarea
+## Checklist de Validación
 
-Implementar la funcionalidad completa de creación de proyectos.
-
-Generar:
-
-1. `ProjectRequestDTO`
-2. `ProjectService`
-3. `ProjectCreateComponent`
-4. Template HTML
-5. Validadores personalizados
-6. Manejo de errores HTTP
-7. Cálculo automático del estado
-
-## Reglas funcionales
-
-### Campos
-
-**Nombre**
-
-* Obligatorio.
-
-**Fecha de inicio**
-
-* Obligatoria.
-* No puede ser anterior a la fecha actual.
-
-**Fecha de fin**
-
-* Obligatoria.
-* No puede ser anterior a la fecha actual.
-* No puede ser menor que la fecha de inicio.
-
-**Descripción**
-
-* Opcional.
-
-**Estado**
-
-* Solo lectura.
-* No editable por el usuario.
-* Calculado automáticamente.
-* Debe enviarse al backend.
-
-### Cálculo del estado
-
-**PLANNED**
-
-```text
-startDate > hoy
-```
-
-**ACTIVE**
-
-```text
-hoy >= startDate && hoy <= endDate
-```
-
-**CLOSED**
-
-```text
-hoy > endDate
-```
-
-El estado debe recalcularse automáticamente cuando cambien las fechas.
-
-### Manejo de fechas
-
-Los inputs tipo date devuelven valores en formato:
-
-```text
-YYYY-MM-DD
-```
-
-No utilizar:
-
-```ts
-new Date('YYYY-MM-DD')
-```
-
-Utilizar una función auxiliar para parsear fechas localmente.
-
-Normalizar todas las comparaciones mediante:
-
-```ts
-date.setHours(0, 0, 0, 0);
-```
-
-para evitar errores por zona horaria, horas, minutos o segundos.
-
-### Validaciones
-
-Mostrar mensajes específicos para:
-
-```text
-El nombre es requerido
-La fecha de inicio es requerida
-La fecha de fin es requerida
-La fecha de inicio no puede ser anterior a hoy
-La fecha de fin no puede ser anterior a hoy
-La fecha de fin debe ser igual o posterior a la fecha de inicio
-La fecha de inicio no puede ser posterior a la fecha de fin
-```
-
-Los campos inválidos deben mostrarse con borde rojo.
-
-### Manejo de errores
-
-**HTTP 400**
-
-* Mostrar mensaje devuelto por el backend.
-* Mantener formulario abierto.
-* Mantener datos ingresados.
-
-**HTTP 500**
-
-* Mostrar: "Error del servidor. Intente nuevamente más tarde".
-* Mantener formulario abierto.
-* Mantener datos ingresados.
-
-### Creación exitosa
-
-Cuando el backend responda `201`:
-
-* Mostrar "Proyecto creado correctamente".
-* Limpiar formulario.
-* Mantener formulario abierto.
-* No redirigir automáticamente.
-* Reiniciar estado visual del formulario.
-
-### Cancelación
-
-Al presionar Cancelar:
-
-* Limpiar formulario.
-* Limpiar mensajes.
-* Navegar al listado de proyectos.
-
-## Requisitos de entrega
-
-Separar claramente:
-
-* ProjectRequestDTO
-* ProjectService
-* project-create.component.ts
-* project-create.component.html
-
-## Calidad esperada
-
-* Angular 21.
-* Signals para estado visual.
-* Reactive Forms.
-* Tipado estricto.
-* Código limpio.
-* Sin warnings de TypeScript.
-* Sin errores de Angular.
-* Sin errores en consola.
-
-## Explicación
-
-Explicar brevemente las decisiones técnicas utilizadas:
-
-* Signals
-* Reactive Forms
-* Validadores personalizados
-* Manejo de fechas
-* RxJS
-* Manejo de errores
-* Tailwind CSS
-* Cálculo automático del estado
+- ✅ El nombre es obligatorio.
+- ✅ La fecha de inicio es obligatoria.
+- ✅ La fecha de fin es obligatoria.
+- ✅ La descripción es opcional.
+- ✅ La fecha de inicio no puede ser anterior a hoy.
+- ✅ La fecha de fin no puede ser anterior a hoy.
+- ✅ La fecha de fin no puede ser menor que la fecha de inicio.
+- ✅ La fecha de inicio no puede ser mayor que la fecha de fin.
+- ✅ El estado se calcula automáticamente.
+- ✅ Si Inicio > Hoy → PLANNED.
+- ✅ Si Hoy está entre Inicio y Fin → ACTIVE.
+- ✅ Si Hoy > Fin → CLOSED.
+- ✅ Se evita el problema de zona horaria al parsear fechas.
+- ✅ El formulario muestra mensajes de error debajo de cada campo.
+- ✅ Los campos inválidos muestran borde rojo.
+- ✅ El formulario no se envía si existen errores.
+- ✅ El backend recibe únicamente valores válidos del enum (`PLANNED`, `ACTIVE`, `CLOSED`).
+- ✅ Error 400 muestra mensaje del backend.
+- ✅ Error 500 muestra mensaje genérico.
+- ✅ Crear proyecto muestra mensaje de éxito.
+- ✅ Crear proyecto limpia el formulario.
+- ✅ El formulario permanece abierto luego de crear.
+- ✅ Cancelar limpia el formulario.
+- ✅ Cancelar redirige al listado.
+- ✅ No existen errores en consola.

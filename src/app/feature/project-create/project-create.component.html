@@ -1,4 +1,4 @@
-<!-- project-create.html -->
+<!-- project-create.component.html -->
 <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
   <div class="max-w-lg w-full bg-white rounded-2xl shadow-xl p-6 md:p-8">
     <!-- Header -->
@@ -7,15 +7,15 @@
       <p class="text-gray-500 text-sm mt-1">Completa los campos obligatorios (*)</p>
     </div>
 
-    <!-- Mensajes de éxito / error globales (para errores del backend) -->
+    <!-- Mensajes de éxito / error globales -->
     @if (successMessage()) {
       <div class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">
-        {{ successMessage() }}
+        ✓ {{ successMessage() }}
       </div>
     }
     @if (errorMessage()) {
       <div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
-        {{ errorMessage() }}
+        ⚠ {{ errorMessage() }}
       </div>
     }
 
@@ -33,9 +33,12 @@
             class="w-full px-4 py-2 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             [class.border-red-500]="f['name'].invalid && f['name'].touched"
             [class.border-gray-300]="!(f['name'].invalid && f['name'].touched)"
+            placeholder="Ej: Proyecto Angular 2026"
           />
           @if (f['name'].invalid && f['name'].touched) {
-            <p class="text-red-500 text-xs mt-1">El nombre es requerido</p>
+            @if (f['name'].errors?.['required']) {
+              <p class="text-red-500 text-xs mt-1">El nombre del proyecto es requerido</p>
+            }
           }
         </div>
 
@@ -52,13 +55,22 @@
             [class.border-gray-300]="!(f['startDate'].invalid && f['startDate'].touched)"
           />
           @if (f['startDate'].invalid && f['startDate'].touched) {
-            <p class="text-red-500 text-xs mt-1">La fecha de inicio es requerida</p>
-          }
+            @if (f['startDate'].errors?.['required']) {
+              <p class="text-red-500 text-xs mt-1">La fecha de inicio es requerida</p>
+            }
+            @if (f['startDate'].errors?.['pastDate']) {
+              <p class="text-red-500 text-xs mt-1">La fecha de inicio no puede ser anterior a hoy</p>
+            }
 
-          @if (f['startDate'].hasError('pastDate')) {
-            <p class="text-red-500 text-xs mt-1">La fecha no puede ser anterior a hoy</p>
+            @if (
+              projectForm.hasError('startDateAfterEndDate') &&
+              (f['startDate'].touched || f['endDate'].touched)
+              ) {
+              <p class="text-red-500 text-xs mt-1">
+                La fecha de inicio no puede ser posterior a la fecha de fin
+              </p>
+            }
           }
-
         </div>
 
         <!-- Fecha de fin -->
@@ -70,41 +82,41 @@
             type="date"
             formControlName="endDate"
             class="w-full px-4 py-2 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            [class.border-red-500]="(f['endDate'].invalid && f['endDate'].touched) || projectForm.errors?.['endDateInvalid']"
-            [class.border-gray-300]="!((f['endDate'].invalid && f['endDate'].touched) || projectForm.errors?.['endDateInvalid'])"
+            [class.border-red-500]="(f['endDate'].invalid && f['endDate'].touched) || (projectForm.hasError('endDateInvalid') && (f['endDate'].touched || f['startDate'].touched))"
+            [class.border-gray-300]="!((f['endDate'].invalid && f['endDate'].touched) || (projectForm.hasError('endDateInvalid') && (f['endDate'].touched || f['startDate'].touched)))"
           />
           @if (f['endDate'].invalid && f['endDate'].touched) {
-            <p class="text-red-500 text-xs mt-1">La fecha de fin es requerida</p>
+            @if (f['endDate'].errors?.['required']) {
+              <p class="text-red-500 text-xs mt-1">La fecha de fin es requerida</p>
+            }
+            @if (f['endDate'].errors?.['pastDate']) {
+              <p class="text-red-500 text-xs mt-1">La fecha de fin no puede ser anterior a hoy</p>
+            }
           }
-
-          @if (f['endDate'].hasError('pastDate')) {
-            <p class="text-red-500 text-xs mt-1">La fecha no puede ser anterior a hoy</p>
-          }
-
-          @if (projectForm.errors?.['endDateInvalid'] && !f['endDate'].untouched) {
-            <p class="text-red-500 text-xs mt-1">{{ projectForm.errors?.['endDateInvalid'] }}</p>
+          @if (
+            projectForm.hasError('startDateAfterEndDate') &&
+            (f['startDate'].touched || f['endDate'].touched)
+            ) {
+            <p class="text-red-500 text-xs mt-1">
+              La fecha de fin debe ser igual o posterior a la fecha de inicio
+            </p>
           }
         </div>
 
-        <!-- Estado (select) -->
+        <!-- Estado (calculado automáticamente - solo lectura) -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">
             Estado <span class="text-red-500">*</span>
           </label>
-          <select
+          <input
+            type="text"
             formControlName="status"
-            class="w-full px-4 py-2 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white"
-            [class.border-red-500]="f['status'].invalid && f['status'].touched"
-            [class.border-gray-300]="!(f['status'].invalid && f['status'].touched)"
-          >
-            <option value="" disabled selected>Seleccionar estado</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="PLANNED">PLANNED</option>
-            <option value="CLOSED">CLOSED</option>
-          </select>
-          @if (f['status'].invalid && f['status'].touched) {
-            <p class="text-red-500 text-xs mt-1">El estado es requerido</p>
-          }
+            readonly
+            placeholder="Selecciona fecha inicio y fin"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed transition-all duration-200 outline-none"
+            [class.text-gray-700]="f['status'].value"
+            [class.text-gray-400]="!f['status'].value"
+          />
         </div>
 
         <!-- Descripción (opcional) -->
@@ -114,6 +126,7 @@
             formControlName="description"
             rows="3"
             class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+            placeholder="Describe el objetivo del proyecto..."
           ></textarea>
         </div>
 
@@ -121,7 +134,7 @@
         <div class="flex gap-3 pt-4">
           <button
             type="button"
-            (click)="router.navigate(['/projects'])"
+            (click)="onCancel()"
             class="flex-1 px-4 py-2 text-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Cancelar

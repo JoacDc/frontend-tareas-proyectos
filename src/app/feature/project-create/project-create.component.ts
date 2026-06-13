@@ -1,5 +1,5 @@
 // project-create.component.ts
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -12,7 +12,7 @@ import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ProjectService } from '../../services/project.service';
 import { ProjectRequestDTO } from '../../core/models/project.request.dto';
-import { catchError, finalize, throwError } from 'rxjs';
+import { catchError, finalize, throwError, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-project-create',
@@ -20,7 +20,7 @@ import { catchError, finalize, throwError } from 'rxjs';
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './project-create.component.html',
 })
-export class ProjectCreateComponent {
+export class ProjectCreateComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private projectService = inject(ProjectService);
   protected router = inject(Router);
@@ -30,32 +30,99 @@ export class ProjectCreateComponent {
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
 
-  // Validador síncrono simple - fecha no anterior a hoy
+  // Subscriptions para limpiar al destruir
+  private startDateSubscription?: Subscription;
+  private endDateSubscription?: Subscription;
+
+  //Metodo auxiliar para evitar errores de comparacion
+  private parseLocalDate(dateString: string): Date {
+    const [year, month, day] = dateString.split('-').map(Number);
+
+    return new Date(year, month - 1, day);
+  }
+
+  // Validador - fecha no anterior a hoy
   validateNotPastDate(control: AbstractControl): ValidationErrors | null {
     if (!control.value) {
       return null;
     }
-    const selectedDate = new Date(control.value);
+
+    const selectedDate = this.parseLocalDate(control.value);
+
     const today = new Date();
+
+    selectedDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
 
-    if (selectedDate < today) {
-      return { pastDate: true };
-    }
-
-    return null;
+    return selectedDate < today ? { pastDate: true } : null;
   }
 
-  // Validador de rango de fechas
+  // Calcular estado basado en fecha actual y rango del proyecto
+  calculateStatus(startDateValue: string, endDateValue: string): string {
+    if (!startDateValue || !endDateValue) {
+      return '';
+    }
+
+    const startDate = this.parseLocalDate(startDateValue);
+    const endDate = this.parseLocalDate(endDateValue);
+
+    const today = new Date();
+
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    // Fechas inválidas
+    if (startDate > endDate) {
+      return '';
+    }
+
+    // Proyecto futuro
+    if (startDate > today) {
+      return 'PLANNED';
+    }
+
+    // Proyecto activo
+    if (today >= startDate && today <= endDate) {
+      return 'ACTIVE';
+    }
+
+    // Proyecto finalizado
+    if (today > endDate) {
+      return 'CLOSED';
+    }
+
+    return '';
+  }
+
+  // Validador de rango de fechas (fin no puede ser anterior a inicio)
   validateDateRange(group: AbstractControl): ValidationErrors | null {
     const start = group.get('startDate')?.value;
     const end = group.get('endDate')?.value;
 
-    if (start && end && new Date(end) < new Date(start)) {
-      return { endDateInvalid: true };
+    if (!start || !end) {
+      return null;
     }
 
-    return null;
+    const startDate = this.parseLocalDate(start);
+    const endDate = this.parseLocalDate(end);
+
+    return startDate > endDate ? { startDateAfterEndDate: true } : null;
+  }
+
+  // Actualizar estado cuando cambian las fechas
+  private updateStatus(): void {
+    const startDate = this.projectForm.get('startDate')?.value;
+    const endDate = this.projectForm.get('endDate')?.value;
+
+    if (!startDate || !endDate) {
+      this.projectForm.patchValue({ status: '' }, { emitEvent: false });
+      return;
+    }
+
+    const status = this.calculateStatus(startDate, endDate);
+
+    this.projectForm.patchValue({ status }, { emitEvent: false });
   }
 
   // Formulario reactivo
@@ -64,54 +131,89 @@ export class ProjectCreateComponent {
       name: ['', [Validators.required]],
       startDate: ['', [Validators.required, this.validateNotPastDate.bind(this)]],
       endDate: ['', [Validators.required, this.validateNotPastDate.bind(this)]],
-      status: ['', [Validators.required]],
+      status: [{ value: '', disabled: true }, [Validators.required]],
       description: [''],
     },
     { validators: this.validateDateRange.bind(this) },
   );
 
-  // Validador personalizado: fecha fin >= fecha inicio
-  private endDateAfterStartDateValidator(group: AbstractControl): ValidationErrors | null {
-    const start = group.get('startDate')?.value;
-    const end = group.get('endDate')?.value;
-    if (start && end && new Date(end) < new Date(start)) {
-      return { endDateInvalid: 'La fecha de fin debe ser igual o posterior a la fecha de inicio' };
-    }
-    return null;
+  ngOnInit() {
+    // Suscribirse a cambios en startDate y endDate
+    this.startDateSubscription = this.projectForm.get('startDate')?.valueChanges.subscribe(() => {
+      this.updateStatus();
+      // Re-validar endDate cuando cambia startDate
+      this.projectForm.get('endDate')?.updateValueAndValidity();
+    });
+
+    this.endDateSubscription = this.projectForm.get('endDate')?.valueChanges.subscribe(() => {
+      this.updateStatus();
+    });
   }
 
-  // Getter para acceder fácil a los campos en el template
+  ngOnDestroy() {
+    this.startDateSubscription?.unsubscribe();
+    this.endDateSubscription?.unsubscribe();
+  }
+
+  // Getter para acceder a los campos en el template
   get f() {
     return this.projectForm.controls;
   }
 
+  // Limpiar formulario
+  resetForm() {
+    this.projectForm.reset({
+      name: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+    });
+    this.updateStatus();
+    this.projectForm.markAsPristine();
+    this.projectForm.markAsUntouched();
+    Object.keys(this.projectForm.controls).forEach((key) => {
+      const control = this.projectForm.get(key);
+      control?.markAsPristine();
+      control?.markAsUntouched();
+    });
+  }
+
   onSubmit() {
-    // Limpiar mensajes previos
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    // Validación cliente (campos obligatorios)
+    this.projectForm.get('status')?.enable();
+
     if (this.projectForm.invalid) {
-      // Marcar todos los campos como touched para mostrar errores
+      this.projectForm.get('status')?.disable();
+
       Object.keys(this.projectForm.controls).forEach((key) => {
         const control = this.projectForm.get(key);
         control?.markAsTouched();
       });
-      // También marcamos el validador cross-field
       this.projectForm.markAsTouched();
+
+      this.errorMessage.set('Por favor, corrija los errores en el formulario');
       return;
     }
 
     this.isSubmitting.set(true);
-    const projectData: ProjectRequestDTO = this.projectForm.value;
+
+    const projectData: ProjectRequestDTO = {
+      name: this.projectForm.get('name')?.value,
+      startDate: this.projectForm.get('startDate')?.value,
+      endDate: this.projectForm.get('endDate')?.value,
+      status: this.projectForm.get('status')?.value,
+      description: this.projectForm.get('description')?.value,
+    };
 
     this.projectService
       .createProject(projectData)
       .pipe(
         catchError((error) => {
-          // Manejo de errores según código HTTP
+          this.projectForm.get('status')?.disable();
+
           if (error.status === 400) {
-            // Intenta extraer mensaje del backend (puede ser error.error.mensaje o error.message)
             const backendMsg =
               error.error?.message ||
               error.error?.error ||
@@ -124,17 +226,28 @@ export class ProjectCreateComponent {
           }
           return throwError(() => error);
         }),
-        finalize(() => this.isSubmitting.set(false)),
+        finalize(() => {
+          this.isSubmitting.set(false);
+          this.projectForm.get('status')?.disable();
+        }),
       )
       .subscribe({
         next: () => {
-          // Éxito (código 201)
           this.successMessage.set('Proyecto creado correctamente');
-          // Redirigir al listado después de 1 segundo
+          this.resetForm();
+
           setTimeout(() => {
-            this.router.navigate(['/projects']); // Ajusta la ruta de tu listado
-          }, 1000);
+            this.successMessage.set(null);
+          }, 3000);
         },
       });
+  }
+
+  // Cancelar y limpiar formulario
+  onCancel() {
+    this.resetForm();
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.router.navigate(['/projects']);
   }
 }
