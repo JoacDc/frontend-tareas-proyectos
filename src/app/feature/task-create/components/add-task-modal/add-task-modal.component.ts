@@ -140,25 +140,44 @@ export class AddTaskModalComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    const taskData: TaskRequestDTO = {
+    const selectedProject = this.selectedProject();
+
+    if (!selectedProject) {
+      this.isLoading.set(false);
+      this.errorMessage.set('Debe seleccionar un proyecto');
+      return;
+    }
+
+    const taskData = {
       title: this.taskForm.get('title')?.value,
       estimatedHours: Number(this.taskForm.get('estimatedHours')?.value),
       assignee: this.taskForm.get('assignee')?.value,
-      status: this.taskForm.get('status')?.value as TaskStatus,
-      createdAt: new Date(this.taskForm.get('createdAt')?.value),
-      finishedAt: new Date(this.taskForm.get('finishedAt')?.value),
+      status: this.taskForm.get('status')?.value,
+      createdAt: this.taskForm.get('createdAt')?.value + 'T00:00:00',
+      finishedAt: this.taskForm.get('finishedAt')?.value + 'T00:00:00',
     };
 
-    this.taskService.createTask(this.selectedProject()!.id, taskData).subscribe({
-      next: (createdTask: TaskResponseDTO): void => {
+    console.log('Enviando:', taskData);
+
+    this.taskService.createTask(selectedProject.id, taskData as any).subscribe({
+      next: (createdTask: TaskResponseDTO) => {
         this.isLoading.set(false);
         this.taskCreated.emit(createdTask);
         this.closeModal();
       },
-      error: (error: Error): void => {
+      error: (error: any) => {
         this.isLoading.set(false);
-        this.errorMessage.set(error.message || 'Error al crear la tarea');
         console.error('Error:', error);
+
+        if (error.error?.message) {
+          this.errorMessage.set(error.error.message);
+        } else if (error.status === 400) {
+          this.errorMessage.set('Error en los datos enviados. Verifique las fechas.');
+        } else if (error.status === 500) {
+          this.errorMessage.set('Error del servidor. Intente nuevamente.');
+        } else {
+          this.errorMessage.set('Error al crear la tarea');
+        }
       },
     });
   }

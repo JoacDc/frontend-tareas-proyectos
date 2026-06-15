@@ -20,7 +20,7 @@
       <button
         (click)="onDeleteProject()"
         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium shadow-sm">
-        🗑️ Eliminar Proyecto
+        Eliminar Proyecto
       </button>
     </div>
   </div>
@@ -77,7 +77,7 @@
             </p>
 
             <!-- Fechas -->
-            <div class="space-y-2 text-sm">
+            <div class="space-y-2 text-sm mb-4">
               <div class="flex items-center text-gray-500">
                 <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -91,9 +91,43 @@
                 <span>Fin: {{ formatDate(project.endDate) }}</span>
               </div>
             </div>
+
+            <!-- SECCION DE TAREAS DEL PROYECTO -->
+            <div class="pt-4 border-t border-gray-200">
+              <h3 class="text-sm font-semibold text-gray-700 mb-3">Tareas</h3>
+
+              @if (getTasksByProjectId(project.id).length === 0) {
+                <p class="text-xs text-gray-500">No hay tareas para este proyecto</p>
+              } @else {
+                <div class="space-y-2">
+                  @for (task of getTasksByProjectId(project.id); track task.id) {
+                    <div class="bg-gray-50 rounded p-2">
+                      <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                          <p class="text-sm font-medium text-gray-800">{{ task.title }}</p>
+                          <p class="text-xs text-gray-600">Responsable: {{ task.assignee }}</p>
+                          <p class="text-xs text-gray-500">Horas: {{ task.estimatedHours }}h</p>
+                        </div>
+                        <span class="px-2 py-0.5 text-xs rounded-full {{ getTaskStatusColor(task.status) }}">
+                          {{ getTaskStatusText(task.status) }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
           </div>
         </div>
       }
     </div>
+  }
+
+  @if (showAddTaskModal()) {
+    <app-add-task-modal
+      [projects]="projects()"
+      (close)="onModalClose()"
+      (taskCreated)="onTaskCreated($event)">
+    </app-add-task-modal>
   }
 </div>
