@@ -1,39 +1,46 @@
-import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject, signal } from '@angular/core';
 import { ProjectResponseDTO } from '../core/models/project.model';
+import { catchError, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { ProjectRequestDTO } from '../core/models/project.request.dto';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class ProjectService {
-  // Signals privadas
-  private projectsSignal = signal<ProjectResponseDTO[]>([]);
-  private loadingSignal = signal<boolean>(false);
-  private errorSignal = signal<string | null>(null);
+  private http = inject(HttpClient);
+  private apiUrl = 'api/projects';
 
-  // Exponer signals como solo lectura
-  readonly projects = this.projectsSignal.asReadonly();
-  readonly loading = this.loadingSignal.asReadonly();
-  readonly error = this.errorSignal.asReadonly();
+  private _projects = signal<ProjectResponseDTO[]>([]);
+  private _loading = signal<boolean>(false);
+  private _error = signal<string | null>(null);
 
-  private apiUrl = '/api/projects';
-
-  constructor(private http: HttpClient) {}
+  readonly projects = this._projects.asReadonly();
+  readonly loading = this._loading.asReadonly();
+  readonly error = this._error.asReadonly();
 
   loadProjects(): void {
-    this.loadingSignal.set(true);
-    this.errorSignal.set(null);
+    this._loading.set(true);
+    this._error.set(null);
 
-    this.http.get<ProjectResponseDTO[]>(this.apiUrl).subscribe({
-      next: (data) => {
-        this.projectsSignal.set(data);
-        this.loadingSignal.set(false);
-      },
-      error: (err) => {
-        console.error('Error al cargar proyectos:', err);
-        this.errorSignal.set('Error al cargar los proyectos. Intente nuevamente.');
-        this.loadingSignal.set(false);
-      },
-    });
+    this.http
+      .get<ProjectResponseDTO[]>(this.apiUrl)
+      .pipe(
+        tap((response) => {
+          console.log('Respuesta del backend:', response); // ← Para debug
+          this._projects.set(response);
+          this._loading.set(false);
+        }),
+        catchError((err) => {
+          console.error('Error en la petición:', err); // ← Para debug
+          this._error.set('No se pudieron cargar los proyectos. Intente nuevamente más tarde.');
+          this._loading.set(false);
+          return of([]);
+        }),
+      )
+      .subscribe();
+  }
+
+  createProject(project: ProjectRequestDTO): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, project);
   }
 }
