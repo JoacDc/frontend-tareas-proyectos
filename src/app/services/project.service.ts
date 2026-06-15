@@ -4,6 +4,7 @@ import { ProjectResponseDTO } from '../core/models/project.model';
 import { catchError, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { ProjectRequestDTO } from '../core/models/project.request.dto';
+import { TaskRequestDTO, TaskResponseDTO } from '../core/models/task.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
@@ -42,5 +43,25 @@ export class ProjectService {
 
   createProject(project: ProjectRequestDTO): Observable<any> {
     return this.http.post(`${this.apiUrl}`, project);
+  }
+
+  addTaskToProject(projectId: number, task: TaskRequestDTO): Observable<TaskResponseDTO> {
+    return this.http.post<TaskResponseDTO>(`${this.apiUrl}/projects/${projectId}/tasks`, task);
+  }
+
+  getTasksByProject(projectId: number): Observable<TaskResponseDTO[]> {
+    return this.http.get<TaskResponseDTO[]>(`${this.apiUrl}/projects/${projectId}/tasks`);
+  }
+
+  updateTaskStatus(taskId: number, status: string): Observable<TaskResponseDTO> {
+    return this.http.patch<TaskResponseDTO>(`${this.apiUrl}/tasks/${taskId}/status`, { status });
+  }
+
+  deleteTask(taskId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/tasks/${taskId}`);
+  }
+
+  getProjects(): Observable<ProjectResponseDTO[]> {
+    return this.http.get<ProjectResponseDTO[]>(`${this.apiUrl}/projects`);
   }
 }
